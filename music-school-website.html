@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Musikschule</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600&family=Bodoni+Moda:wght@400;700&display=swap');
+
+        :root {
+            --primary: #1a1a1a;
+            --accent: #D4AF37;
+            --background: #ffffff;
+            --text: #333333;
+            --spacing: clamp(2rem, 5vw, 5rem);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--background);
+            overflow-x: hidden;
+        }
+
+        .cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s, background 0.3s;
+            mix-blend-mode: difference;
+        }
+
+        .cursor.hover {
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+        }
+
+        .nav-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1rem var(--spacing);
+            transition: background 0.3s;
+        }
+
+        .nav-wrapper.scrolled {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Bodoni Moda', serif;
+            font-size: 1.5rem;
+            color: var(--primary);
+            text-decoration: none;
+            mix-blend-mode: difference;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 3rem;
+        }
+
+        .nav-links a {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 1rem;
+            position: relative;
+            padding: 0.5rem 0;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 var(--spacing);
+            position: relative;
+            background: var(--primary);
+            color: white;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('hero.jpg') center/cover;
+            opacity: 0.5;
+            filter: grayscale(100%);
+        }
+
+        .hero-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-family: 'Bodoni Moda', serif;
+            font-size: clamp(3rem, 8vw, 6rem);
+            line-height: 1.1;
+            margin-bottom: 2rem;
+        }
+
+        .hero-text {
+            max-width: 600px;
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            opacity: 0.7;
+        }
+
+        .scroll-line {
+            width: 2px;
+            height: 60px;
+            background: white;
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        .scroll-line::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--accent);
+            animation: scrollLine 2s infinite;
+        }
+
+        @keyframes scrollLine {
+            0% { transform: scaleY(0); transform-origin: top; }
+            50% { transform: scaleY(1); transform-origin: top; }
+            50.1% { transform: scaleY(1); transform-origin: bottom; }
+            100% { transform: scaleY(0); transform-origin: bottom; }
+        }
+
+        .section {
+            padding: var(--spacing);
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .course-card {
+            position: relative;
+            aspect-ratio: 1;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .course-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: transform 0.5s;
+        }
+
+        .course-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 2rem;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            color: white;
+            transform: translateY(100%);
+            transition: transform 0.5s;
+        }
+
+        .course-card:hover .course-image {
+            transform: scale(1.1);
+        }
+
+        .course-card:hover .course-content {
+            transform: translateY(0);
+        }
+
+        .section-title {
+            font-family: 'Bodoni Moda', serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            margin-bottom: 1rem;
+            opacity: 0;
+        }
+
+        .section-subtitle {
+            font-size: 1.2rem;
+            color: var(--accent);
+            margin-bottom: 3rem;
+            opacity: 0;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: var(--accent);
+            color: var(--primary);
+            text-decoration: none;
+            border-radius: 2px;
+            font-weight: 600;
+            transition: transform 0.3s;
+            margin-top: 2rem;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+
+        footer {
+            background: var(--primary);
+            color: white;
+            padding: calc(var(--spacing) * 2) var(--spacing);
+            margin-top: var(--spacing);
+        }
+
+        .footer-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 4rem;
+        }
+
+        .footer-section h3 {
+            font-family: 'Bodoni Moda', serif;
+            margin-bottom: 1.5rem;
+            color: var(--accent);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .footer-links a:hover {
+            opacity: 1;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.5rem;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .social-links a:hover {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero-text {
+                max-width: 100%;
+            }
+        }
+
+        .marquee {
+            position: relative;
+            width: 100vw;
+            max-width: 100%;
+            height: 150px;
+            overflow: hidden;
+            background: var(--primary);
+            color: white;
+            margin: var(--spacing) 0;
+        }
+
+        .marquee-content {
+            display: flex;
+            align-items: center;
+            position: absolute;
+            width: fit-content;
+            animation: marquee 20s linear infinite;
+        }
+
+        .marquee-item {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-family: 'Bodoni Moda', serif;
+            padding: 0 2rem;
+            white-space: nowrap;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+    </style>
+</head>
+<body x-data="{ scrolled: false }">
+    <div class="cursor"></div>
+
+    <div class="nav-wrapper" :class="{ 'scrolled': scrolled }">
+        <nav>
+            <a href="#" class="logo">Musikschule Einklang</a>
+            <div class="nav-links">
+                <a href="#courses">Kurse</a>
+                <a href="#about">Über uns</a>
+                <a href="#teachers">Lehrer</a>
+                <a href="#contact">Kontakt</a>
+            </div>
+        </nav>
+    </div>
+
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Musik ist die Sprache der Seele</h1>
+                <p>Erleben Sie die Verschmelzung von Tradition und Innovation in unserer renommierten Musikschule.</p>
+                <a href="#contact" class="cta-button">Ihre Reise beginnt hier</a>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <span>Scroll</span>
+            <div class="scroll-line"></div>
+        </div>
+    </section>
+
+    <div class="marquee">
+        <div class="marquee-content">
+            <div class="marquee-item">Klavier • Violine • Cello • Gesang • Klarinette • Flöte • </div>
+            <div class="marquee-item">Klavier • Violine • Cello • Gesang • Klarinette • Flöte • </div>
+        </div>
+    </div>
+
+    <section id="courses" class="section">
+        <h2 class="section-title">Unsere Meisterklassen</h2>
+        <p class="section-subtitle">Exzellenz in der musikalischen Ausbildung</p>
+        <div class="courses-grid">
+            <div class="course-card">
+                <div class="course-image" style="background-image: url('piano.jpg')"></div>
+                <div class="course-content">
+                    <h3>Klavier</h3>
+                    <p>Von Bach bis Moderne: Entdecken Sie die zeitlose Eleganz des Klaviers.</p>
+                </div>
+            </div>
+            <div class="course-card">
+                <div class="course-image" style="background-image: url('violin.jpg')"></div>
+                <div class="course-content">
+                    <h3>Violine</h3>
+                    <p>Klassische Violinenausbildung in der deutschen Tradition.</p>
+                </div>
+            </div>
+            <div class="course-card">
+                <div class="course-image" style="background-image: url('sing.jpg')"></div>
+                <div class="course-content">
+                    <h3>Gesang</h3>
+                    <p>Ihre Stimme als Instrument: Von Klassik bis Contemporary.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Musikschule Einklang</h3>
+                <p>Tradition. Innovation. Exzellenz.</p>
+                <div class="social-links">
+                    <a href="#" aria-label="Facebook">📱</a>
+                    <a href="#" aria-label="Instagram">📷</a>
+                    <a href="#" aria-label="YouTube">🎥</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Kontakt</h3>
+                <ul class="footer-links">
+                    <li>Goldener Spiegel 6</li>
+                    <li>57074 Siegen</li>
+                    <li>info@tru-tec.de</li>
+                    <li>+49 170 7238166</li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Designed by TruTec.</h3>
+                <ul class="footer-links">
+                    <li><a href="https://tru-tec.de">Homepage</a></li>
+                    <li><a href="https://tru-tec.de/impressum.php">Impressum</a></li>
+                    <li><a href="https://tru-tec.de/datenschutz.php">Datenschutz</a></li>
+                    <li><a href="https://tru-tec.de/index.php#contact">Kontakt</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    
